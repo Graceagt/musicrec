@@ -18,6 +18,7 @@ class MusicExpertController extends Controller
         ["conditions" => ["energetic","like_vocals"], "cond_type"=>"AND","rule_cf"=>0.75,"conclusion"=>"K-Pop / Pop"],
     ];
 
+    // --- CF combine ---
     private function combineCF($cf1, $cf2) {
         if ($cf1 >= 0 && $cf2 >= 0) {
             return $cf1 + $cf2 * (1 - $cf1);
@@ -28,6 +29,7 @@ class MusicExpertController extends Controller
         return ($cf1 + $cf2) / (1 - min(abs($cf1), abs($cf2)));
     }
 
+    // --- Evaluasi rule ---
     private function evaluateRule($rule, $answers) {
         $vals = [];
         foreach ($rule["conditions"] as $cond) {
@@ -39,6 +41,7 @@ class MusicExpertController extends Controller
         return $symptomCF * ($rule["rule_cf"] ?? 1.0);
     }
 
+    // --- Forward chaining ---
     private function forwardChain($rules, $answers) {
         $conclusions = [];
         foreach ($rules as $rule) {
@@ -53,6 +56,7 @@ class MusicExpertController extends Controller
         return $conclusions;
     }
 
+    // --- Form pertanyaan ---
     public function index() {
         $questions = [
             "energetic" => "Seberapa besar kamu merasa ENERGETIC/bersemangat?",
@@ -70,11 +74,43 @@ class MusicExpertController extends Controller
         return view('music-expert', compact('questions'));
     }
 
-    public function recommend(Request $request) {
-        $answers = $request->except('_token');
-        $conclusions = $this->forwardChain($this->rules, $answers);
+    // --- Rekomendasi ---
+    public function recommend(Request $request)
+    {
+        $userAnswers = $request->all();
 
+        // 1. Forward chaining
+        $conclusions = $this->forwardChain($this->rules, $userAnswers);
+
+        // 2. Ambil genre dengan CF tertinggi
         arsort($conclusions);
-        return view('result', compact('conclusions'));
+        $topGenre = array_key_first($conclusions);
+
+        // 3. Baca CSV dataset
+        $filePath = storage_path('app/Top_Hits_2000_2019.csv'); 
+        $songs = [];
+        if (($handle = fopen($filePath, "r")) !== false) {
+            $header = fgetcsv($handle); 
+            while (($row = fgetcsv($handle)) !== false) {
+                $song = array_combine($header, $row);
+                // match genre dari CSV (kolom: "genre")
+                if (stripos($song['genre'], $topGenre) !== false) {
+                    $songs[] = $song;
+                }
+            }
+            fclose($handle);
+        }
+
+        // 4. Ambil top 3 lagu berdasarkan tahun rilis terbaru
+        $topSongs = collect($songs)
+            ->sortByDesc('release year')
+            ->take(3);
+
+        // 5. Kirim ke view
+        return view('result', [
+            'conclusions' => $conclusions,
+            'topGenre' => $topGenre,
+            'topSongs' => $topSongs
+        ]);
     }
 }

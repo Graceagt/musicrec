@@ -8,20 +8,20 @@
         @foreach($questions as $key => $label)
             <div class="mb-4">
                 <label class="form-label">{{ $label }}</label>
-                <div class="d-flex align-items-center">
-                    <input type="range" 
-                           class="form-range me-3 flex-grow-1 slider-dynamic"
-                           name="{{ $key }}" 
-                           id="{{ $key }}"
-                           min="0" max="1" step="0.1" value="0">
-                    <span id="{{ $key }}_val" class="badge bg-warning text-dark">0</span>
-                </div>
-                <div class="d-flex justify-content-between">
-                    <small>0</small>
-                    <small>1</small>
+                <div class="input-group">
+                    <button type="button" class="btn btn-outline-warning"
+                            onclick="stepDown('{{ $key }}')">−</button>
+                    
+                    <input type="number" class="form-control text-center" 
+                           id="{{ $key }}" name="{{ $key }}" 
+                           value="0" min="0" max="1" step="0.1" readonly>
+                    
+                    <button type="button" class="btn btn-outline-warning"
+                            onclick="stepUp('{{ $key }}')">+</button>
                 </div>
             </div>
         @endforeach
+
         <div class="text-center">
             <button type="submit" class="btn btn-custom mt-3 px-4 py-2">Dapatkan Rekomendasi</button>
         </div>
@@ -29,11 +29,20 @@
 </div>
 
 <script>
-    // Update nilai angka di samping slider
-    document.querySelectorAll('.slider-dynamic').forEach(slider => {
-        slider.addEventListener('input', function() {
-            document.getElementById(this.id + '_val').innerText = this.value;
-        });
-    });
+    // fungsi tambah/kurang
+    function stepUp(id) {
+        let input = document.getElementById(id);
+        let val = parseFloat(input.value);
+        if (val < 1) {
+            input.value = (val + 0.1).toFixed(1);
+        }
+    }
+    function stepDown(id) {
+        let input = document.getElementById(id);
+        let val = parseFloat(input.value);
+        if (val > 0) {
+            input.value = (val - 0.1).toFixed(1);
+        }
+    }
 </script>
 @endsection

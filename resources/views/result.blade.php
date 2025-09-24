@@ -16,8 +16,7 @@
     <ul class="list-group">
         @foreach($topSongs as $song)
             <li class="list-group-item d-flex justify-content-between">
-                <span>{{ $song['Title'] }} - {{ $song['Artist'] }}</span>
-                <span>⭐ {{ $song['Popularity'] }}</span>
+                <span>{{ $song['song'] }} - {{ $song['artist'] }}</span>
             </li>
         @endforeach
     </ul>

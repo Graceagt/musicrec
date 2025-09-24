@@ -75,42 +75,58 @@ class MusicExpertController extends Controller
     }
 
     // --- Rekomendasi ---
-    public function recommend(Request $request)
-    {
-        $userAnswers = $request->all();
+public function recommend(Request $request)
+{
+    $userAnswers = $request->all();
 
-        // 1. Forward chaining
-        $conclusions = $this->forwardChain($this->rules, $userAnswers);
+    // 1. Forward chaining
+    $conclusions = $this->forwardChain($this->rules, $userAnswers);
 
-        // 2. Ambil genre dengan CF tertinggi
-        arsort($conclusions);
-        $topGenre = array_key_first($conclusions);
+    // 2. Ambil genre dengan CF tertinggi
+    arsort($conclusions);
+    $topGenre = array_key_first($conclusions);
 
-        // 3. Baca CSV dataset
-        $filePath = storage_path('app/Top_Hits_2000_2019.csv'); 
-        $songs = [];
-        if (($handle = fopen($filePath, "r")) !== false) {
-            $header = fgetcsv($handle); 
-            while (($row = fgetcsv($handle)) !== false) {
-                $song = array_combine($header, $row);
-                // match genre dari CSV (kolom: "genre")
-                if (stripos($song['genre'], $topGenre) !== false) {
-                    $songs[] = $song;
-                }
+    // 3. Mapping genre rules ke dataset
+    $genreMap = [
+        'Pop' => 'pop',
+        'K-Pop / Pop' => 'pop',
+        'R&B / Ballad' => 'pop',
+        'Lo-fi / Ambient' => 'pop',
+        'Indie Pop' => 'pop',
+
+        'Rock / Metal' => 'rock',
+        'Indie / Acoustic' => 'rock',
+
+        'EDM' => 'Dance/Electronic',
+        'Hip Hop' => 'hip hop',
+    ];
+    $datasetGenre = $genreMap[$topGenre] ?? $topGenre;
+
+    // 4. Baca CSV dataset
+    $filePath = storage_path('app/Top_Hits_2000_2019.csv'); 
+    $songs = [];
+    if (($handle = fopen($filePath, "r")) !== false) {
+        $header = fgetcsv($handle); 
+        while (($row = fgetcsv($handle)) !== false) {
+            $song = array_combine($header, $row);
+            if (stripos(strtolower($song['genre']), strtolower($datasetGenre)) !== false) {
+                $songs[] = $song;
             }
-            fclose($handle);
         }
-
-        // 4. Ambil top 3 lagu berdasarkan tahun rilis terbaru
-        $topSongs = collect($songs)
-            ->sortByDesc('release year')
-            ->take(3);
-
-        // 5. Kirim ke view
-        return view('result', [
-            'conclusions' => $conclusions,
-            'topGenre' => $topGenre,
-            'topSongs' => $topSongs
-        ]);
+        fclose($handle);
     }
+
+    // 5. Ambil top 3 lagu berdasarkan tahun rilis terbaru
+    $topSongs = collect($songs)
+        ->sortByDesc('release year')
+        ->take(3);
+
+    // 6. Kirim ke view
+    return view('result', [
+        'conclusions' => $conclusions,
+        'topGenre' => $topGenre,
+        'topSongs' => $topSongs
+    ]);
+}
+
 }

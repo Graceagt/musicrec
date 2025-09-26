@@ -56,6 +56,19 @@ class MusicExpertController extends Controller
         return $conclusions;
     }
 
+    // 🔹 Tambahin helper iTunes di sini
+    private function getPreviewUrl($title, $artist) {
+        $query = urlencode($title . ' ' . $artist);
+        $url = "https://itunes.apple.com/search?term={$query}&entity=song&limit=1";
+
+        $json = @file_get_contents($url); // pakai @ biar gak error kalau request gagal
+        if ($json === false) return null;
+
+        $data = json_decode($json, true);
+        return $data['results'][0]['previewUrl'] ?? null;
+    }
+
+
     // --- Form pertanyaan ---
     public function index() {
         $questions = [
@@ -119,7 +132,13 @@ public function recommend(Request $request)
     // 5. Ambil top 3 lagu berdasarkan tahun rilis terbaru
     $topSongs = collect($songs)
         ->sortByDesc('release year')
-        ->take(3);
+        ->take(3)
+        ->map(function($song) {
+            // Tambahin preview_url dari iTunes
+            $song['preview_url'] = $this->getPreviewUrl($song['song'], $song['artist']);
+            return $song;
+        });
+
 
     // 6. Kirim ke view
     return view('result', [

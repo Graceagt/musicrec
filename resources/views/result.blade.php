@@ -13,14 +13,27 @@
     </ul>
 
     <h3 class="mb-3">🔥 Top 3 Lagu Genre {{ $topGenre }}</h3>
-    <ul class="list-group">
+    <div class="row row-cols-1 row-cols-md-3 g-4">
         @foreach($topSongs as $song)
-            <li class="list-group-item d-flex justify-content-between">
-                <span>{{ $song['song'] }} - {{ $song['artist'] }}</span>
-            </li>
+            <div class="col">
+                <div class="card h-100 shadow-lg border-0 text-white rounded-3" 
+                    style="background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(12px);">
+                    <div class="card-body d-flex flex-column justify-content-between">
+                        <div class="mb-3">
+                            <h5 class="card-title fw-bold">
+                                🎶 {{ $song['song'] }}
+                            </h5>
+                            <p class="card-text text-light mb-1">👤 {{ $song['artist'] }}</p>
+                            <span class="badge bg-warning text-dark shadow-sm">
+                                {{ $topGenre }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         @endforeach
-    </ul>
+    </div>
 
-    <a href="/music-expert" class="btn btn-custom mt-4">🔙 Kembali</a>
-</div>
+
+
 @endsection

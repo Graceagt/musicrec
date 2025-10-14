@@ -110,7 +110,7 @@ class MusicExpertController extends Controller
             // fallback minimal 1 lagu dummy jika tidak ada
             if (empty($songs)) {
                 $songs[] = [
-                    'track_name'  => ucfirst(strtolower($mood)) . ' Song',
+                    'track_name'  => 'Song',
                     'artist_name' => 'Unknown Artist',
                     'preview_url' => null,
                     'artwork'     => 'default-artwork.png',

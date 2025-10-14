@@ -8,7 +8,7 @@ $client = new Client([
 ]);
 
 foreach ($topSongs as &$song) {
-    $query = urlencode($song['song'] . ' ' . $song['artist']);
+    $query = urlencode($song['title'] . ' ' . $song['artist']);
     $response = $client->get("search?q={$query}&type=track&limit=1");
     $data = json_decode($response->getBody(), true);
 

@@ -6,146 +6,165 @@ use Illuminate\Http\Request;
 
 class MusicExpertController extends Controller
 {
-    private $rules = [
-        ["conditions" => ["energetic","like_beats","want_dance"], "cond_type"=>"AND","rule_cf"=>0.9,"conclusion"=>"EDM"],
-        ["conditions" => ["happy","like_vocals"], "cond_type"=>"AND","rule_cf"=>0.85,"conclusion"=>"Pop"],
-        ["conditions" => ["calm","want_relax"], "cond_type"=>"AND","rule_cf"=>0.95,"conclusion"=>"Lo-fi / Ambient"],
-        ["conditions" => ["romantic","want_slow"], "cond_type"=>"AND","rule_cf"=>0.9,"conclusion"=>"R&B / Ballad"],
-        ["conditions" => ["angry","energetic"], "cond_type"=>"AND","rule_cf"=>0.9,"conclusion"=>"Rock / Metal"],
-        ["conditions" => ["angry"], "cond_type"=>"OR","rule_cf"=>0.6,"conclusion"=>"Rock / Metal"],
-        ["conditions" => ["nostalgic"], "cond_type"=>"OR","rule_cf"=>0.8,"conclusion"=>"Indie / Acoustic"],
-        ["conditions" => ["calm","happy"], "cond_type"=>"AND","rule_cf"=>0.7,"conclusion"=>"Indie Pop"],
-        ["conditions" => ["energetic","like_vocals"], "cond_type"=>"AND","rule_cf"=>0.75,"conclusion"=>"K-Pop / Pop"],
+    // 🔹 Rule basis pengetahuan pakar + CF
+    private $cfRules = [
+        ['if'=>['calm'],'then'=>'calm','cf'=>1.0],
+        ['if'=>['happy'],'then'=>'happy','cf'=>1.0],
+        ['if'=>['energetic'],'then'=>'energetic','cf'=>1.0],
+        ['if'=>['party'],'then'=>'party','cf'=>1.0],
+        ['if'=>['angry'],'then'=>'angry','cf'=>1.0],
+        ['if'=>['sad'],'then'=>'sad','cf'=>1.0],
+        ['if'=>['romantic'],'then'=>'romantic','cf'=>1.0],
+        ['if'=>['focus'],'then'=>'focus','cf'=>1.0],
+        ['if'=>['calm','focus'],'then'=>'focus','cf'=>0.8],
+        ['if'=>['happy','romantic'],'then'=>'happy_romantic','cf'=>0.7],
+        ['if'=>['energetic','party'],'then'=>'party','cf'=>0.8],
+        ['if'=>['sad','romantic'],'then'=>'emotional','cf'=>0.85],
+        ['if'=>['angry','energetic'],'then'=>'intense','cf'=>0.9],
+        ['if'=>['calm','focus','romantic'],'then'=>'ambient_focus_romantic','cf'=>0.75],
+        ['if'=>['happy','energetic','party'],'then'=>'party_pop','cf'=>0.8],
+        ['if'=>['sad','romantic','calm'],'then'=>'mellow','cf'=>0.7],
+        ['if'=>['happy','romantic','calm','focus'],'then'=>'happy_relaxed_focus','cf'=>0.65],
     ];
 
-    // --- CF combine ---
-    private function combineCF($cf1, $cf2) {
-        if ($cf1 >= 0 && $cf2 >= 0) {
-            return $cf1 + $cf2 * (1 - $cf1);
-        }
-        if ($cf1 <= 0 && $cf2 <= 0) {
-            return $cf1 + $cf2 * (1 + $cf1);
-        }
-        return ($cf1 + $cf2) / (1 - min(abs($cf1), abs($cf2)));
-    }
+    private $validMoods = ['calm','happy','energetic','party','angry','sad','romantic','focus'];
 
-    // --- Evaluasi rule ---
-    private function evaluateRule($rule, $answers) {
-        $vals = [];
-        foreach ($rule["conditions"] as $cond) {
-            $vals[] = $answers[$cond] ?? 0.0;
-        }
-        if (empty($vals)) return 0.0;
-
-        $symptomCF = ($rule["cond_type"] == "AND") ? min($vals) : max($vals);
-        return $symptomCF * ($rule["rule_cf"] ?? 1.0);
-    }
-
-    // --- Forward chaining ---
-    private function forwardChain($rules, $answers) {
-        $conclusions = [];
-        foreach ($rules as $rule) {
-            $cf = $this->evaluateRule($rule, $answers);
-            $target = $rule["conclusion"];
-            if (isset($conclusions[$target])) {
-                $conclusions[$target] = $this->combineCF($conclusions[$target], $cf);
-            } else {
-                $conclusions[$target] = $cf;
+    // 🔹 Forward chaining CF
+    private function forwardChainingCF($facts)
+    {
+        $newFacts = $facts;
+        $changed = true;
+        $maxIterations = 50; // batas aman
+        $iteration = 0;
+    
+        while($changed && $iteration < $maxIterations){
+            $changed = false;
+            $iteration++;
+            foreach($this->cfRules as $rule){
+                $premises=$rule['if'];
+                $then=$rule['then'];
+                $cfPakar=$rule['cf'];
+                $cfPremis=[];
+                foreach($premises as $p){
+                    if(isset($newFacts[$p]) && $newFacts[$p]>0) $cfPremis[]=$newFacts[$p];
+                    else { $cfPremis=[]; break; }
+                }
+                if(!empty($cfPremis)){
+                    $cfRule=min($cfPremis)*$cfPakar;
+                    if(isset($newFacts[$then])){
+                        $newFacts[$then]=round($newFacts[$then]+$cfRule*(1-$newFacts[$then]),2);
+                    } else { $newFacts[$then]=round($cfRule,2); }
+                    $changed=true;
+                }
             }
         }
-        return $conclusions;
+    
+        return $newFacts;
     }
 
-    // 🔹 Tambahin helper iTunes di sini
-    private function getPreviewUrl($title, $artist) {
-        $query = urlencode($title . ' ' . $artist);
-        $url = "https://itunes.apple.com/search?term={$query}&entity=song&limit=1";
-
-        $json = @file_get_contents($url); // pakai @ biar gak error kalau request gagal
-        if ($json === false) return null;
-
-        $data = json_decode($json, true);
-        return $data['results'][0]['previewUrl'] ?? null;
-    }
-
-
-    // --- Form pertanyaan ---
-    public function index() {
-        $questions = [
-            "energetic" => "Seberapa besar kamu merasa ENERGETIC/bersemangat?",
-            "like_beats" => "Apakah kamu suka musik dengan beat kuat?",
-            "want_dance" => "Apakah ingin musik untuk menari/dance?",
-            "happy" => "Seberapa HAPPY/ceria mood kamu?",
-            "like_vocals" => "Apakah kamu suka musik dengan vokal dominan?",
-            "calm" => "Seberapa CALM/tenang mood kamu?",
-            "want_relax" => "Apakah ingin musik untuk relaksasi?",
-            "romantic" => "Apakah kamu sedang mood ROMANTIC?",
-            "want_slow" => "Apakah ingin musik yang lambat?",
-            "angry" => "Seberapa ANGRY/Marah mood kamu?",
-            "nostalgic" => "Apakah kamu sedang merasa NOSTALGIC/nostalgia?",
+    // 🔹 Halaman utama
+    public function index()
+    {
+        $moods = $this->validMoods;
+        $cfOptions = [
+            '0'   => 'Tidak',
+            '0.2' => 'Tidak tahu',
+            '0.4' => 'Sedikit yakin',
+            '0.6' => 'Cukup yakin',
+            '0.8' => 'Yakin',
+            '1'   => 'Sangat yakin',
         ];
-        return view('music-expert', compact('questions'));
+
+        return view('music-expert', compact('moods', 'cfOptions'));
     }
 
-    // --- Rekomendasi ---
-public function recommend(Request $request)
-{
-    $userAnswers = $request->all();
+    // 🔹 Rekomendasi lagu (Top 3 dari iTunes)
+    public function recommend(Request $request)
+    {
+        $cfValues = $request->input('cf', []);
+        $validMoods = [];
 
-    // 1. Forward chaining
-    $conclusions = $this->forwardChain($this->rules, $userAnswers);
-
-    // 2. Ambil genre dengan CF tertinggi
-    arsort($conclusions);
-    $topGenre = array_key_first($conclusions);
-
-    // 3. Mapping genre rules ke dataset
-    $genreMap = [
-        'Pop' => 'pop',
-        'K-Pop / Pop' => 'pop',
-        'R&B / Ballad' => 'pop',
-        'Lo-fi / Ambient' => 'pop',
-        'Indie Pop' => 'pop',
-
-        'Rock / Metal' => 'rock',
-        'Indie / Acoustic' => 'rock',
-
-        'EDM' => 'Dance/Electronic',
-        'Hip Hop' => 'hip hop',
-    ];
-    $datasetGenre = $genreMap[$topGenre] ?? $topGenre;
-
-    // 4. Baca CSV dataset
-    $filePath = storage_path('app/Top_Hits_2000_2019.csv'); 
-    $songs = [];
-    if (($handle = fopen($filePath, "r")) !== false) {
-        $header = fgetcsv($handle); 
-        while (($row = fgetcsv($handle)) !== false) {
-            $song = array_combine($header, $row);
-            if (stripos(strtolower($song['genre']), strtolower($datasetGenre)) !== false) {
-                $songs[] = $song;
+        foreach ($cfValues as $mood => $cf) {
+            $cf = floatval($cf);
+            if ($cf > 0 && in_array($mood, $this->validMoods)) {
+                $validMoods[$mood] = $cf;
             }
         }
-        fclose($handle);
+
+        if (empty($validMoods)) {
+            return back()->with('error', 'Masukkan minimal satu nilai CF lebih dari 0.');
+        }
+
+        // 🔹 Jalankan forward chaining pakar
+        $derivedFacts = $this->forwardChainingCF($validMoods);
+
+        // Ambil top 3 berdasarkan nilai CF tertinggi
+        arsort($derivedFacts);
+        $topMoods = array_slice(array_keys($derivedFacts), 0, 3);
+
+        // 🔹 Ambil rekomendasi dari iTunes
+        $topSongs = [];
+        foreach ($topMoods as $mood) {
+            $songs = $this->getItunesTracksByMood($mood);
+
+            // fallback minimal 1 lagu dummy jika tidak ada
+            if (empty($songs)) {
+                $songs[] = [
+                    'track_name'  => ucfirst(strtolower($mood)) . ' Song',
+                    'artist_name' => 'Unknown Artist',
+                    'preview_url' => null,
+                    'artwork'     => 'default-artwork.png',
+                    'itunes_url'  => '#',
+                ];
+            }
+
+            $topSongs[$mood] = $songs;
+        }
+
+        return view('result', [
+            'validMoods' => $validMoods,
+            'derivedFacts' => $derivedFacts,
+            'topSongs' => $topSongs
+        ]);
     }
 
-    // 5. Ambil top 3 lagu berdasarkan tahun rilis terbaru
-    $topSongs = collect($songs)
-        ->sortByDesc('release year')
-        ->take(3)
-        ->map(function($song) {
-            // Tambahin preview_url dari iTunes
-            $song['preview_url'] = $this->getPreviewUrl($song['song'], $song['artist']);
-            return $song;
-        });
+    // ===================== ITUNES HELPER =====================
+    private function getItunesTracksByMood($mood)
+    {
+        // mapping mood derivatif ke keyword iTunes
+        $keywordMap = [
+            'happy_romantic' => 'happy',
+            'ambient_focus_romantic' => 'ambient',
+            'party_pop' => 'pop',
+            'mellow' => 'chill',
+            'happy_relaxed_focus' => 'happy',
+            'emotional' => 'sad',
+            'intense' => 'energetic',
+        ];
 
+        $query = $keywordMap[$mood] ?? $mood;
+        $url = "https://itunes.apple.com/search?term=".urlencode($query)."&media=music&limit=3";
 
-    // 6. Kirim ke view
-    return view('result', [
-        'conclusions' => $conclusions,
-        'topGenre' => $topGenre,
-        'topSongs' => $topSongs
-    ]);
-}
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
+        $result = curl_exec($ch);
+        curl_close($ch);
 
+        $data = json_decode($result,true);
+        if(empty($data['results'])) return null;
+
+        $songs = [];
+        foreach($data['results'] as $track){
+            $songs[] = [
+                'track_name'  => $track['trackName'] ?? 'Unknown',
+                'artist_name' => $track['artistName'] ?? 'Unknown',
+                'preview_url' => $track['previewUrl'] ?? null,
+                'artwork'     => $track['artworkUrl100'] ?? null,
+                'itunes_url'  => $track['trackViewUrl'] ?? '#', // link ke iTunes
+            ];
+        }
+
+        return $songs;
+    }
 }

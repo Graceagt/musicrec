@@ -16,5 +16,6 @@ use App\Http\Controllers\MusicExpertController;
 
 
 // 🔹 Sistem Pakar Musik
-Route::get('/', [MusicExpertController::class, 'index']);
-Route::post('/music-expert/recommend', [MusicExpertController::class, 'recommend']);
+Route::get('/', [MusicExpertController::class, 'index'])->name('music.index');
+Route::post('/recommend', [MusicExpertController::class, 'recommend'])->name('music.recommend');
+

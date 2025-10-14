@@ -1,48 +1,31 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🎧 Pilih Mood Musik</title>
+</head>
+<body>
+    <h1>Pilih Mood dan Tingkat Keyakinan (CF)</h1>
 
-@section('content')
-<div class="card p-4">
-    <h2 class="text-center mb-4">🎶 Sistem Pakar Rekomendasi Musik</h2>
-    <form method="POST" action="/music-expert/recommend">
+    @if(session('error'))
+        <p style="color:red">{{ session('error') }}</p>
+    @endif
+
+    <form action="{{ route('music.recommend') }}" method="POST">
         @csrf
-        @foreach($questions as $key => $label)
-            <div class="mb-4">
-                <label class="form-label">{{ $label }}</label>
-                <div class="input-group">
-                    <button type="button" class="btn btn-outline-warning"
-                            onclick="stepDown('{{ $key }}')">−</button>
-                    
-                    <input type="number" class="form-control text-center" 
-                           id="{{ $key }}" name="{{ $key }}" 
-                           value="0" min="0" max="1" step="0.1" readonly>
-                    
-                    <button type="button" class="btn btn-outline-warning"
-                            onclick="stepUp('{{ $key }}')">+</button>
-                </div>
+
+        @foreach($moods as $mood)
+            <div>
+                <label for="{{ $mood }}">{{ ucfirst($mood) }}</label>
+                <select name="cf[{{ $mood }}]" id="{{ $mood }}">
+                    <option value="" selected disabled>-- Pilih tingkat mood Anda --</option>
+                    @foreach($cfOptions as $value => $label)
+                        <option value="{{ $value }}">{{ $label }}</option>
+                    @endforeach
+                </select>
             </div>
         @endforeach
 
-        <div class="text-center">
-            <button type="submit" class="btn btn-custom mt-3 px-4 py-2">Dapatkan Rekomendasi</button>
-        </div>
+        <button type="submit">Rekomendasikan Musik</button>
     </form>
-</div>
-
-<script>
-    // fungsi tambah/kurang
-    function stepUp(id) {
-        let input = document.getElementById(id);
-        let val = parseFloat(input.value);
-        if (val < 1) {
-            input.value = (val + 0.1).toFixed(1);
-        }
-    }
-    function stepDown(id) {
-        let input = document.getElementById(id);
-        let val = parseFloat(input.value);
-        if (val > 0) {
-            input.value = (val - 0.1).toFixed(1);
-        }
-    }
-</script>
-@endsection
+</body>
+</html>

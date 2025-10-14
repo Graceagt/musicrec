@@ -15,7 +15,7 @@
             color: #fff;
 
             /* Gradient animasi */
-            background: linear-gradient(270deg, #667eea, #764ba2, #667eea);
+            background: linear-gradient(270deg, #ff69b4, #667eea, #6a0dad);
             background-size: 600% 600%;
 
             animation: gradientMove 15s ease infinite;
@@ -36,7 +36,7 @@
         }
 
         .form-range::-webkit-slider-thumb {
-            background: #ffcc00;
+            background: #ffcd03;
         }
 
         .btn-custom {

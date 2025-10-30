@@ -1,32 +1,234 @@
 @extends('layouts.app')
 
-@section('styles')
-    <link href="{{ asset('css/music-expert.css') }}" rel="stylesheet">
-@endsection
-
 @section('content')
-<div class="music-background">
-    <h1>🎧 Pilih Mood dan Tingkat Keyakinan (CF)</h1>
+<div class="music-background position-relative d-flex flex-column justify-content-center align-items-center" 
+     style="min-height: 100vh; overflow: hidden;">
 
-    @if(session('error'))
-        <p class="text-danger fw-semibold">{{ session('error') }}</p>
-    @endif
+    <!-- 🌌 Background bintang -->
+    <div class="stars"></div>
 
-    <form action="{{ route('music.recommend') }}" method="POST">
-        @csrf
-        @foreach($moods as $mood)
-            <div class="card glass-card">
-                <label for="{{ $mood }}" class="form-label">{{ ucfirst($mood) }}</label>
-                <select name="cf[{{ $mood }}]" id="{{ $mood }}" class="form-select" required>
-                    <option value="" selected disabled>-- Pilih tingkat mood Anda --</option>
-                    @foreach($cfOptions as $value => $label)
-                        <option value="{{ $value }}">{{ $label }}</option>
+    <!-- 🎶 Judul -->
+    <h1 class="text-center text-white fw-bold display-6 mb-4 animate-title">
+        <span class="typing-text">🎧 Pilih Mood Musik</span>
+    </h1>
+
+    <!-- 💎 Card Form -->
+    <div class="card glass-card text-center p-4 rounded-4 position-relative animate-float"
+         style="width: 100%; max-width: 520px; overflow: hidden; color: #fff;">
+
+        <p class="small text-light opacity-75 mb-4 animate-fade-in-delay">
+            Pilih mood dan tingkat keyakinan Anda (CF 0.0 - 1.0)
+        </p>
+
+        @if(session('error'))
+            <p class="text-danger fw-semibold">{{ session('error') }}</p>
+        @endif
+
+        <form id="moodForm" action="{{ route('music.recommend') }}" method="POST" class="animate-slide-up">
+            @csrf
+
+            <div class="slides-viewport" style="overflow: hidden; width: 100%;">
+                <div class="slides-container" style="display:flex; width:100%; transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);">
+
+                    @foreach($moods as $index => $mood)
+                        <div class="question-slide {{ $loop->first ? 'active' : '' }}" data-order="{{ $loop->index }}" 
+                             style="flex:0 0 100%; min-height: 300px; display:flex; flex-direction:column; justify-content:center; align-items:center; transition: opacity 0.4s ease;">
+
+                            <label for="{{ $mood }}" class="form-label fs-5 mb-4 text-white">
+                                {{ ucfirst($mood) }}
+                            </label>
+
+                            <select name="cf[{{ $mood }}]" id="{{ $mood }}" 
+                                    class="form-select text-center w-75 bg-transparent text-white border-light rounded mb-4"
+                                    style="max-width: 250px;" required>
+                                <option value="" selected disabled>-- Pilih tingkat mood Anda --</option>
+                                @foreach($cfOptions as $value => $label)
+                                    <option value="{{ $value }}" class="text-dark">{{ $label }}</option>
+                                @endforeach
+                            </select>
+
+                            <div class="d-flex justify-content-center gap-3 mt-3">
+                                <button type="button" id="backBtn_{{ $loop->index }}" 
+                                        class="btn btn-back rounded-pill px-4" onclick="prevSlide()">Back</button>
+
+                                @if (!$loop->last)
+                                    <button type="button" id="nextBtn_{{ $loop->index }}" 
+                                            class="btn btn-next fw-semibold rounded-pill px-4"
+                                            onclick="nextSlide()">Next</button>
+                                @else
+                                    <button type="submit" class="btn btn-success fw-semibold px-4 py-2 rounded-pill glow-btn">
+                                        🎵 Rekomendasikan Musik
+                                    </button>
+                                @endif
+                            </div>
+
+                            <p class="mt-4 mb-0 small text-light opacity-75">
+                                Pertanyaan {{ $loop->index + 1 }} dari {{ count($moods) }}
+                            </p>
+                        </div>
                     @endforeach
-                </select>
-            </div>
-        @endforeach
 
-        <button type="submit" class="btn btn-success mt-3">🎵 Rekomendasikan Musik</button>
-    </form>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
+
+<!-- ====================== SCRIPT ====================== -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.querySelector('.slides-container');
+    const slides = Array.from(document.querySelectorAll('.question-slide'));
+    const totalSlides = slides.length;
+    if (!container || totalSlides === 0) return;
+
+    let currentIndex = 0;
+
+    function updateButtonsVisibility() {
+        slides.forEach((s, idx) => {
+            const backBtn = s.querySelector(`#backBtn_${idx}`);
+            const nextBtn = s.querySelector(`#nextBtn_${idx}`);
+            if (backBtn) backBtn.style.display = (idx === 0) ? 'none' : 'inline-block';
+            if (nextBtn) nextBtn.style.display = (idx === totalSlides - 1) ? 'none' : 'inline-block';
+        });
+    }
+
+    function updateSlidePosition() {
+        container.style.transform = `translateX(-${currentIndex * 100}%)`;
+        slides.forEach((slide, idx) => slide.classList.toggle('active', idx === currentIndex));
+        updateButtonsVisibility();
+    }
+
+    window.nextSlide = function() {
+        if (currentIndex < totalSlides - 1) {
+            currentIndex++;
+            updateSlidePosition();
+        }
+    };
+
+    window.prevSlide = function() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            updateSlidePosition();
+        }
+    };
+
+    updateSlidePosition();
+});
+</script>
+
+<!-- ====================== STYLE ====================== -->
+<style>
+/* 🌌 Background animasi bintang */
+.stars {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(white 1px, transparent 1px);
+  background-size: 3px 3px;
+  animation: moveStars 100s linear infinite;
+  opacity: 0.15;
+}
+@keyframes moveStars {
+  from { transform: translate3d(0,0,0); }
+  to { transform: translate3d(-500px, 500px, 0); }
+}
+
+/* ✨ Efek tulisan judul mengetik */
+.typing-text {
+  display: inline-block;
+  border-right: 3px solid #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  width: 0;
+  animation: typing 4s steps(40, end) forwards, blink 0.7s infinite;
+}
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+@keyframes blink {
+  50% { border-color: transparent; }
+}
+
+/* 💎 Card */
+.glass-card {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    backdrop-filter: blur(15px);
+    border-radius: 1.5rem;
+}
+.glass-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 2px;
+    border-radius: inherit;
+    background: linear-gradient(120deg, #fbbf24, #22d3ee, #a855f7, #fbbf24);
+    background-size: 300% 300%;
+    animation: borderGlow 8s ease infinite;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    -webkit-mask-composite: destination-out;
+}
+@keyframes borderGlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Animasi */
+.animate-fade-in-delay { opacity: 0; animation: fadeIn 1s 0.3s forwards; }
+.animate-slide-up { opacity: 0; animation: slideUp 1s 0.5s forwards; }
+.animate-title { animation: fadeIn 1s ease-out; }
+.animate-float { animation: floatCard 6s ease-in-out infinite; }
+
+@keyframes fadeIn { from {opacity: 0; transform: translateY(10px);} to {opacity: 1; transform: translateY(0);} }
+@keyframes slideUp { from {opacity: 0; transform: translateY(20px);} to {opacity: 1; transform: translateY(0);} }
+@keyframes floatCard { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+/* Slide aktif */
+.question-slide { opacity: 0; }
+.question-slide.active { opacity: 1; }
+
+/* Tombol NEXT */
+.btn-next {
+    background-color: #fff;
+    color: #000;
+    border: 2px solid #fff;
+    transition: all 0.3s ease, transform 0.2s ease;
+}
+.btn-next:hover {
+    background-color: #000;
+    color: #fff;
+    border-color: #fff;
+    transform: scale(1.07);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
+}
+
+/* Tombol BACK */
+.btn-back {
+    background-color: transparent;
+    color: #fff;
+    border: 2px solid #fff;
+    transition: all 0.3s ease, transform 0.2s ease;
+}
+.btn-back:hover {
+    background-color: #fff;
+    color: #000;
+    transform: scale(1.07);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+}
+
+/* Tombol submit glowing */
+.glow-btn {
+    box-shadow: 0 0 10px rgba(53, 54, 54, 0.7);
+    transition: all 0.3s ease;
+}
+.glow-btn:hover {
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.9);
+    transform: scale(1.05);
+}
+</style>
 @endsection

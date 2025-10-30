@@ -8,11 +8,11 @@ class MusicExpertController extends Controller
 {
     // ... (cfRules dan validMoods tetap seperti sebelumnya) ...
     private $cfRules = [
-        ['if' => ['calm'],        'then' => 'focus',        'cf' => 0.8],
+        ['if' => ['calm'],        'then' => 'calm',        'cf' => 0.8],
         ['if' => ['happy'],       'then' => 'happy',        'cf' => 1.0],
-        ['if' => ['energetic'],   'then' => 'party',        'cf' => 0.9],
+        ['if' => ['energetic'],   'then' => 'energetic',        'cf' => 0.9],
         ['if' => ['party'],       'then' => 'party',        'cf' => 1.0],
-        ['if' => ['angry'],       'then' => 'intense',      'cf' => 0.85],
+        ['if' => ['angry'],       'then' => 'angry',      'cf' => 0.85],
         ['if' => ['sad'],         'then' => 'sad',          'cf' => 1.0],
         ['if' => ['romantic'],    'then' => 'romantic',     'cf' => 1.0],
         ['if' => ['focus'],       'then' => 'focus',        'cf' => 1.0],
@@ -25,6 +25,8 @@ class MusicExpertController extends Controller
         ['if' => ['happy','energetic','party'],'then' => 'party_pop',        'cf' => 0.85],
         ['if' => ['sad','romantic','calm'],    'then' => 'mellow',           'cf' => 0.7],
         ['if' => ['happy','romantic','calm','focus'],'then' => 'happy_relaxed_focus','cf' => 0.65],
+        
+
     ];
 
     private $validMoods = ['calm','happy','energetic','party','angry','sad','romantic','focus'];
@@ -166,6 +168,7 @@ class MusicExpertController extends Controller
         ];
 
         $query = $genreMap[$mood] ?? $mood;
+
         $url = "https://itunes.apple.com/search?term=" . urlencode($query) . "&media=music&limit=10";
 
         $ch = curl_init();

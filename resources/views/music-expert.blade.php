@@ -31,8 +31,8 @@
                 <div class="slides-container" style="display:flex; width:100%; transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);">
 
                     @foreach($moods as $index => $mood)
-                        <div class="question-slide" data-order="{{ $loop->index }}" 
-                             style="flex:0 0 100%; min-height: 300px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                        <div class="question-slide {{ $loop->first ? 'active' : '' }}" data-order="{{ $loop->index }}" 
+                             style="flex:0 0 100%; min-height: 300px; display:flex; flex-direction:column; justify-content:center; align-items:center; transition: opacity 0.4s ease;">
 
                             <label for="{{ $mood }}" class="form-label fs-5 mb-4 text-white">
                                 {{ ucfirst($mood) }}
@@ -40,7 +40,7 @@
 
                             <select name="cf[{{ $mood }}]" id="{{ $mood }}" 
                                     class="form-select text-center w-75 bg-transparent text-white border-light rounded mb-4"
-                                    style="max-width: 250px;">
+                                    style="max-width: 250px;" required>
                                 <option value="" selected disabled>-- Pilih tingkat mood Anda --</option>
                                 @foreach($cfOptions as $value => $label)
                                     <option value="{{ $value }}" class="text-dark">{{ $label }}</option>
@@ -56,7 +56,8 @@
                                             class="btn btn-next fw-semibold rounded-pill px-4"
                                             onclick="nextSlide()">Next</button>
                                 @else
-                                    <button type="submit" class="btn btn-success fw-semibold px-4 py-2 rounded-pill glow-btn">
+                                <button type="submit" class="btn btn-light text-black fw-semibold px-4 py-2 rounded-pill glow-btn">
+
                                         🎵 Rekomendasikan Musik
                                     </button>
                                 @endif
@@ -74,6 +75,7 @@
     </div>
 </div>
 
+<!-- ====================== SCRIPT ====================== -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const container = document.querySelector('.slides-container');
@@ -85,15 +87,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateButtonsVisibility() {
         slides.forEach((s, idx) => {
-            const backBtn = s.querySelector(`#backBtn_${idx}`);
-            const nextBtn = s.querySelector(`#nextBtn_${idx}`);
+            const backBtn = s.querySelector(#backBtn_${idx});
+            const nextBtn = s.querySelector(#nextBtn_${idx});
             if (backBtn) backBtn.style.display = (idx === 0) ? 'none' : 'inline-block';
             if (nextBtn) nextBtn.style.display = (idx === totalSlides - 1) ? 'none' : 'inline-block';
         });
     }
 
     function updateSlidePosition() {
-        container.style.transform = `translateX(-${currentIndex * 100}%)`;
+        container.style.transform = translateX(-${currentIndex * 100}%);
+        slides.forEach((slide, idx) => slide.classList.toggle('active', idx === currentIndex));
         updateButtonsVisibility();
     }
 
@@ -115,6 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<!-- ====================== STYLE ====================== -->
 <style>
 /* 🌌 Background animasi bintang */
 .stars {
@@ -180,9 +184,14 @@ document.addEventListener('DOMContentLoaded', function() {
 .animate-slide-up { opacity: 0; animation: slideUp 1s 0.5s forwards; }
 .animate-title { animation: fadeIn 1s ease-out; }
 .animate-float { animation: floatCard 6s ease-in-out infinite; }
+
 @keyframes fadeIn { from {opacity: 0; transform: translateY(10px);} to {opacity: 1; transform: translateY(0);} }
 @keyframes slideUp { from {opacity: 0; transform: translateY(20px);} to {opacity: 1; transform: translateY(0);} }
 @keyframes floatCard { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+/* Slide aktif */
+.question-slide { opacity: 0; }
+.question-slide.active { opacity: 1; }
 
 /* Tombol NEXT */
 .btn-next {

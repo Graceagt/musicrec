@@ -238,3 +238,59 @@ document.addEventListener('DOMContentLoaded', function() {
 </style>
 @endsection
 
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.querySelector('.slides-container');
+        const slides = Array.from(document.querySelectorAll('.question-slide'));
+        const totalSlides = slides.length;
+        if (!container || totalSlides === 0) return;
+    
+        let currentIndex = 0;
+    
+        function updateButtonsVisibility() {
+            slides.forEach((s, idx) => {
+                const backBtn = s.querySelector(`#backBtn_${idx}`);
+                const nextBtn = s.querySelector(`#nextBtn_${idx}`);
+                if (backBtn) backBtn.style.display = (idx === 0) ? 'none' : 'inline-block';
+                if (nextBtn) nextBtn.style.display = (idx === totalSlides - 1) ? 'none' : 'inline-block';
+            });
+        }
+    
+        function updateSlidePosition() {
+            container.style.transform = `translateX(-${currentIndex * 100}%)`;
+            slides.forEach((slide, idx) => slide.classList.toggle('active', idx === currentIndex));
+            updateButtonsVisibility();
+        }
+    
+        window.nextSlide = function() {
+            if (currentIndex < totalSlides - 1) {
+                currentIndex++;
+                updateSlidePosition();
+            }
+        };
+    
+        window.prevSlide = function() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateSlidePosition();
+            }
+        };
+    
+        updateSlidePosition();
+    
+        // ===== WARNING UNTUK FORM SUBMIT =====
+        const moodForm = document.getElementById('moodForm');
+        moodForm.addEventListener('submit', function(e) {
+            const allCFs = moodForm.querySelectorAll('.cf-options');
+            for (let cfGroup of allCFs) {
+                const checked = cfGroup.querySelector('input[type="radio"]:checked');
+                if (!checked) {
+                    e.preventDefault(); // hentikan submit
+                    alert('⚠️ Harap pilih salah satu mood pada setiap pertanyaan!');
+                    return false;
+                }
+            }
+        });
+    });
+    </script>
+    

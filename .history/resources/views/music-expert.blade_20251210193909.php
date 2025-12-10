@@ -116,7 +116,17 @@ document.addEventListener('DOMContentLoaded', function() {
     updateSlidePosition();
 });
 
+<select id="mySelect" class="form-select">
+    <option value="">-- Pilih opsi --</option>
+    <option value="1">Opsi 1</option>
+    <option value="2">Opsi 2</option>
+</select>
 
+<button onclick="cekPilihan()" class="btn btn-primary mt-3">Submit</button>
+
+<p id="warningMsg" style="color: #ff4d4d; font-weight: 600; margin-top: 10px; display: none;">
+    ⚠️ Silakan pilih opsi terlebih dahulu.
+</p>
 </script>
 
 <!-- ====================== STYLE ====================== -->
@@ -237,4 +247,3 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 </style>
 @endsection
-

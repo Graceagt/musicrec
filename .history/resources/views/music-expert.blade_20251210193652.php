@@ -115,8 +115,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     updateSlidePosition();
 });
-
-
 </script>
 
 <!-- ====================== STYLE ====================== -->
@@ -237,4 +235,3 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 </style>
 @endsection
-

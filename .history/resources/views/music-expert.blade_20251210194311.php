@@ -4,15 +4,12 @@
 <div class="music-background position-relative d-flex flex-column justify-content-center align-items-center" 
      style="min-height: 100vh; overflow: hidden;">
 
-    <!-- 🌌 Background bintang -->
     <div class="stars"></div>
 
-    <!-- 🎶 Judul -->
     <h1 class="text-center text-white fw-bold display-6 mb-4 animate-title">
         <span class="typing-text">🎧 Pilih Mood Musik</span>
     </h1>
 
-    <!-- 💎 Card Form -->
     <div class="card glass-card text-center p-4 rounded-4 position-relative animate-float"
          style="width: 100%; max-width: 520px; overflow: hidden; color: #fff;">
 
@@ -41,7 +38,7 @@
                             <div class="cf-options d-flex flex-wrap justify-content-center gap-3 mb-4">
                                 @foreach($cfOptions as $value => $label)
                                     <label class="cf-box">
-                                        <input type="radio" name="cf[{{ $mood }}]" value="{{ $value }}" required>
+                                        <input type="radio" name="cf[{{ $mood }}]" value="{{ $value }}">
                                         <span>{{ $label }}</span>
                                     </label>
                                 @endforeach
@@ -54,13 +51,19 @@
                                 @if (!$loop->last)
                                     <button type="button" id="nextBtn_{{ $loop->index }}" 
                                             class="btn btn-next fw-semibold rounded-pill px-4"
-                                            onclick="nextSlide()">Next</button>
+                                            onclick="validateNext('{{ $mood }}')">Next</button>
                                 @else
-                                    <button type="submit" class="btn btn-light text-black fw-semibold px-4 py-2 rounded-pill glow-btn">
+                                    <button type="submit" class="btn btn-light text-black fw-semibold px-4 py-2 rounded-pill glow-btn"
+                                            onclick="return validateSubmit()">
                                         🎵 Rekomendasikan Musik
                                     </button>
                                 @endif
                             </div>
+
+                            <!-- ⚠️ WARNING -->
+                            <p class="warning-msg text-danger fw-semibold mt-2 mb-0" style="display:none;">
+                                ⚠️ Anda harus memilih salah satu nilai CF terlebih dahulu.
+                            </p>
 
                             <p class="mt-4 mb-0 small text-light opacity-75">
                                 Pertanyaan {{ $loop->index + 1 }} dari {{ count($moods) }}
@@ -99,13 +102,6 @@ document.addEventListener('DOMContentLoaded', function() {
         updateButtonsVisibility();
     }
 
-    window.nextSlide = function() {
-        if (currentIndex < totalSlides - 1) {
-            currentIndex++;
-            updateSlidePosition();
-        }
-    };
-
     window.prevSlide = function() {
         if (currentIndex > 0) {
             currentIndex--;
@@ -113,128 +109,66 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
+    /* ==============================
+       VALIDASI NEXT
+    ===============================*/
+    window.validateNext = function(moodName) {
+        const radios = document.querySelectorAll(`input[name="cf[${moodName}]"]`);
+        const warning = slides[currentIndex].querySelector('.warning-msg');
+
+        let selected = false;
+        radios.forEach(r => { if (r.checked) selected = true; });
+
+        if (!selected) {
+            warning.style.display = "block";
+            warning.style.animation = "shake 0.4s";
+            setTimeout(() => warning.style.animation = "", 400);
+            return;
+        }
+
+        warning.style.display = "none";
+        currentIndex++;
+        updateSlidePosition();
+    };
+
+    /* ==============================
+       VALIDASI SUBMIT
+    ===============================*/
+    window.validateSubmit = function() {
+        for (let i = 0; i < totalSlides; i++) {
+            const moodName = slides[i].querySelector("input[type='radio']").name;
+            const moodKey = moodName.match(/\[(.*?)\]/)[1];
+            const radios = document.querySelectorAll(`input[name="cf[${moodKey}]"]`);
+            let selected = false;
+            radios.forEach(r => { if (r.checked) selected = true; });
+
+            if (!selected) {
+                currentIndex = i;
+                updateSlidePosition();
+                const warning = slides[i].querySelector('.warning-msg');
+                warning.style.display = "block";
+                warning.style.animation = "shake 0.4s";
+                setTimeout(() => warning.style.animation = "", 400);
+                return false;
+            }
+        }
+        return true;
+    };
+
     updateSlidePosition();
 });
-
-
 </script>
 
-<!-- ====================== STYLE ====================== -->
+<!-- ANIMASI SHAKE -->
 <style>
-/* 🌌 Background animasi bintang */
-.stars {
-  position: absolute;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(white 1px, transparent 1px);
-  background-size: 3px 3px;
-  animation: moveStars 100s linear infinite;
-  opacity: 0.15;
-}
-@keyframes moveStars {
-  from { transform: translate3d(0,0,0); }
-  to { transform: translate3d(-500px, 500px, 0); }
-}
-
-/* ✨ Efek typing judul */
-.typing-text {
-  display: inline-block;
-  border-right: 3px solid #fff;
-  white-space: nowrap;
-  overflow: hidden;
-  width: 0;
-  animation: typing 4s steps(40, end) forwards, blink 0.7s infinite;
-}
-@keyframes typing { from { width: 0; } to { width: 100%; } }
-@keyframes blink { 50% { border-color: transparent; } }
-
-/* 💎 Glass card */
-.glass-card {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-    backdrop-filter: blur(15px);
-    border-radius: 1.5rem;
-}
-.glass-card::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    padding: 2px;
-    border-radius: inherit;
-    background: linear-gradient(120deg, #fbbf24, #22d3ee, #a855f7, #fbbf24);
-    background-size: 300% 300%;
-    animation: borderGlow 8s ease infinite;
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask-composite: exclude;
-}
-@keyframes borderGlow {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-/* Animasi */
-.animate-fade-in-delay { opacity: 0; animation: fadeIn 1s 0.3s forwards; }
-.animate-slide-up { opacity: 0; animation: slideUp 1s 0.5s forwards; }
-.animate-title { animation: fadeIn 1s ease-out; }
-.animate-float { animation: floatCard 6s ease-in-out infinite; }
-
-@keyframes fadeIn { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
-@keyframes slideUp { from {opacity:0; transform:translateY(20px);} to {opacity:1; transform:translateY(0);} }
-@keyframes floatCard { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-
-/* Slide aktif */
-.question-slide { opacity: 0; }
-.question-slide.active { opacity: 1; }
-
-/* Tombol */
-.btn-next, .btn-back {
-    border: 2px solid #fff;
-    transition: 0.3s ease, transform 0.2s ease;
-}
-.btn-next { background:#fff; color:#000; }
-.btn-next:hover { background:#000; color:#fff; transform:scale(1.07); }
-
-.btn-back { background:transparent; color:#fff; }
-.btn-back:hover { background:#fff; color:#000; transform:scale(1.07); }
-
-/* Submit glowing */
-.glow-btn:hover {
-    box-shadow: 0 0 20px rgba(255,255,255,0.8);
-    transform: scale(1.05);
-}
-
-/* CF Box Styling */
-.cf-options {
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: center;
-    gap: 18px;
-}
-.cf-box {
-    background: rgba(255,255,255,0.15);
-    border: 2px solid rgba(255,255,255,0.25);
-    padding: 25px 30px;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: 0.3s ease;
-    color: #fff;
-    font-weight: 500;
-    min-width: 100px;
-    text-align: center;
-}
-.cf-box:hover {
-    background: rgba(255,255,255,0.25);
-    transform: scale(1.05);
-}
-.cf-box input[type="radio"] { display:none; }
-.cf-box input[type="radio"]:checked ~ span,
-.cf-box:has(input[type="radio"]:checked) {
-    background:#fff;
-    color:#000 !important;
-    border-color:#fff;
+@keyframes shake {
+    0% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-6px); }
+    80% { transform: translateX(6px); }
+    100% { transform: translateX(0); }
 }
 </style>
-@endsection
 
+@endsection

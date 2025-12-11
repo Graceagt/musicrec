@@ -38,14 +38,14 @@
                                 {{ ucfirst($mood) }}
                             </label>
 
-                            <div class="cf-options d-flex flex-wrap justify-content-center gap-3 mb-4">
+                            <select name="cf[{{ $mood }}]" id="{{ $mood }}" 
+                                    class="form-select text-center w-75 bg-transparent text-white border-light rounded mb-4"
+                                    style="max-width: 250px;" required>
+                                <option value="" selected disabled>-- Pilih tingkat mood Anda --</option>
                                 @foreach($cfOptions as $value => $label)
-                                    <label class="cf-box">
-                                        <input type="radio" name="cf[{{ $mood }}]" value="{{ $value }}" required>
-                                        <span>{{ $label }}</span>
-                                    </label>
+                                    <option value="{{ $value }}" class="text-dark">{{ $label }}</option>
                                 @endforeach
-                            </div>
+                            </select>
 
                             <div class="d-flex justify-content-center gap-3 mt-3">
                                 <button type="button" id="backBtn_{{ $loop->index }}" 
@@ -56,7 +56,7 @@
                                             class="btn btn-next fw-semibold rounded-pill px-4"
                                             onclick="nextSlide()">Next</button>
                                 @else
-                                    <button type="submit" class="btn btn-light text-black fw-semibold px-4 py-2 rounded-pill glow-btn">
+                                    <button type="submit" class="btn btn-success fw-semibold px-4 py-2 rounded-pill glow-btn">
                                         🎵 Rekomendasikan Musik
                                     </button>
                                 @endif
@@ -86,15 +86,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateButtonsVisibility() {
         slides.forEach((s, idx) => {
-            const backBtn = s.querySelector(#backBtn_${idx});
-            const nextBtn = s.querySelector(#nextBtn_${idx});
+            const backBtn = s.querySelector(`#backBtn_${idx}`);
+            const nextBtn = s.querySelector(`#nextBtn_${idx}`);
             if (backBtn) backBtn.style.display = (idx === 0) ? 'none' : 'inline-block';
             if (nextBtn) nextBtn.style.display = (idx === totalSlides - 1) ? 'none' : 'inline-block';
         });
     }
 
     function updateSlidePosition() {
-        container.style.transform = translateX(-${currentIndex * 100}%);
+        container.style.transform = `translateX(-${currentIndex * 100}%)`;
         slides.forEach((slide, idx) => slide.classList.toggle('active', idx === currentIndex));
         updateButtonsVisibility();
     }
@@ -115,8 +115,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     updateSlidePosition();
 });
-
-
 </script>
 
 <!-- ====================== STYLE ====================== -->
@@ -136,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
   to { transform: translate3d(-500px, 500px, 0); }
 }
 
-/* ✨ Efek typing judul */
+/* ✨ Efek tulisan judul mengetik */
 .typing-text {
   display: inline-block;
   border-right: 3px solid #fff;
@@ -145,10 +143,15 @@ document.addEventListener('DOMContentLoaded', function() {
   width: 0;
   animation: typing 4s steps(40, end) forwards, blink 0.7s infinite;
 }
-@keyframes typing { from { width: 0; } to { width: 100%; } }
-@keyframes blink { 50% { border-color: transparent; } }
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+@keyframes blink {
+  50% { border-color: transparent; }
+}
 
-/* 💎 Glass card */
+/* 💎 Card */
 .glass-card {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.15);
@@ -167,6 +170,7 @@ document.addEventListener('DOMContentLoaded', function() {
     animation: borderGlow 8s ease infinite;
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask-composite: exclude;
+    -webkit-mask-composite: destination-out;
 }
 @keyframes borderGlow {
     0% { background-position: 0% 50%; }
@@ -180,65 +184,51 @@ document.addEventListener('DOMContentLoaded', function() {
 .animate-title { animation: fadeIn 1s ease-out; }
 .animate-float { animation: floatCard 6s ease-in-out infinite; }
 
-@keyframes fadeIn { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
-@keyframes slideUp { from {opacity:0; transform:translateY(20px);} to {opacity:1; transform:translateY(0);} }
+@keyframes fadeIn { from {opacity: 0; transform: translateY(10px);} to {opacity: 1; transform: translateY(0);} }
+@keyframes slideUp { from {opacity: 0; transform: translateY(20px);} to {opacity: 1; transform: translateY(0);} }
 @keyframes floatCard { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
 
 /* Slide aktif */
 .question-slide { opacity: 0; }
 .question-slide.active { opacity: 1; }
 
-/* Tombol */
-.btn-next, .btn-back {
+/* Tombol NEXT */
+.btn-next {
+    background-color: #fff;
+    color: #000;
     border: 2px solid #fff;
-    transition: 0.3s ease, transform 0.2s ease;
+    transition: all 0.3s ease, transform 0.2s ease;
 }
-.btn-next { background:#fff; color:#000; }
-.btn-next:hover { background:#000; color:#fff; transform:scale(1.07); }
-
-.btn-back { background:transparent; color:#fff; }
-.btn-back:hover { background:#fff; color:#000; transform:scale(1.07); }
-
-/* Submit glowing */
-.glow-btn:hover {
-    box-shadow: 0 0 20px rgba(255,255,255,0.8);
-    transform: scale(1.05);
-}
-
-/* CF Box Styling */
-.cf-options {
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: center;
-    gap: 18px;
-}
-.cf-box {
-    background: rgba(255,255,255,0.15);
-    border: 2px solid rgba(255,255,255,0.25);
-    padding: 25px 30px;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: 0.3s ease;
+.btn-next:hover {
+    background-color: #000;
     color: #fff;
-    font-weight: 500;
-    min-width: 100px;
-    text-align: center;
+    border-color: #fff;
+    transform: scale(1.07);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
 }
-.cf-box:hover {
-    background: rgba(255,255,255,0.25);
+
+/* Tombol BACK */
+.btn-back {
+    background-color: transparent;
+    color: #fff;
+    border: 2px solid #fff;
+    transition: all 0.3s ease, transform 0.2s ease;
+}
+.btn-back:hover {
+    background-color: #fff;
+    color: #000;
+    transform: scale(1.07);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+}
+
+/* Tombol submit glowing */
+.glow-btn {
+    box-shadow: 0 0 10px rgba(53, 54, 54, 0.7);
+    transition: all 0.3s ease;
+}
+.glow-btn:hover {
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.9);
     transform: scale(1.05);
-}
-.cf-box input[type="radio"] { display:none; }
-.cf-box input[type="radio"]:checked ~ span,
-.cf-box:has(input[type="radio"]:checked) {
-    background:#fff;
-    color:#000 !important;
-    border-color:#fff;
 }
 </style>
-<<<<<<< HEAD
 @endsection
-=======
-@endsection
-
->>>>>>> 0221e70c1f792ac528ceced0bb11b3dc63b75872

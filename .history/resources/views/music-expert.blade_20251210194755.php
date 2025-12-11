@@ -86,15 +86,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateButtonsVisibility() {
         slides.forEach((s, idx) => {
-            const backBtn = s.querySelector(#backBtn_${idx});
-            const nextBtn = s.querySelector(#nextBtn_${idx});
+            const backBtn = s.querySelector(`#backBtn_${idx}`);
+            const nextBtn = s.querySelector(`#nextBtn_${idx}`);
             if (backBtn) backBtn.style.display = (idx === 0) ? 'none' : 'inline-block';
             if (nextBtn) nextBtn.style.display = (idx === totalSlides - 1) ? 'none' : 'inline-block';
         });
     }
 
     function updateSlidePosition() {
-        container.style.transform = translateX(-${currentIndex * 100}%);
+        container.style.transform = `translateX(-${currentIndex * 100}%)`;
         slides.forEach((slide, idx) => slide.classList.toggle('active', idx === currentIndex));
         updateButtonsVisibility();
     }
@@ -236,9 +236,5 @@ document.addEventListener('DOMContentLoaded', function() {
     border-color:#fff;
 }
 </style>
-<<<<<<< HEAD
-@endsection
-=======
 @endsection
 
->>>>>>> 0221e70c1f792ac528ceced0bb11b3dc63b75872

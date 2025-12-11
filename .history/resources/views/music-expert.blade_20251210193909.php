@@ -86,15 +86,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateButtonsVisibility() {
         slides.forEach((s, idx) => {
-            const backBtn = s.querySelector(#backBtn_${idx});
-            const nextBtn = s.querySelector(#nextBtn_${idx});
+            const backBtn = s.querySelector(`#backBtn_${idx}`);
+            const nextBtn = s.querySelector(`#nextBtn_${idx}`);
             if (backBtn) backBtn.style.display = (idx === 0) ? 'none' : 'inline-block';
             if (nextBtn) nextBtn.style.display = (idx === totalSlides - 1) ? 'none' : 'inline-block';
         });
     }
 
     function updateSlidePosition() {
-        container.style.transform = translateX(-${currentIndex * 100}%);
+        container.style.transform = `translateX(-${currentIndex * 100}%)`;
         slides.forEach((slide, idx) => slide.classList.toggle('active', idx === currentIndex));
         updateButtonsVisibility();
     }
@@ -116,7 +116,17 @@ document.addEventListener('DOMContentLoaded', function() {
     updateSlidePosition();
 });
 
+<select id="mySelect" class="form-select">
+    <option value="">-- Pilih opsi --</option>
+    <option value="1">Opsi 1</option>
+    <option value="2">Opsi 2</option>
+</select>
 
+<button onclick="cekPilihan()" class="btn btn-primary mt-3">Submit</button>
+
+<p id="warningMsg" style="color: #ff4d4d; font-weight: 600; margin-top: 10px; display: none;">
+    ⚠️ Silakan pilih opsi terlebih dahulu.
+</p>
 </script>
 
 <!-- ====================== STYLE ====================== -->
@@ -236,9 +246,4 @@ document.addEventListener('DOMContentLoaded', function() {
     border-color:#fff;
 }
 </style>
-<<<<<<< HEAD
 @endsection
-=======
-@endsection
-
->>>>>>> 0221e70c1f792ac528ceced0bb11b3dc63b75872

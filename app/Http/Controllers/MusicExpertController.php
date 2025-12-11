@@ -168,7 +168,6 @@ class MusicExpertController extends Controller
         ];
 
         $query = $genreMap[$mood] ?? $mood;
-
         $url = "https://itunes.apple.com/search?term=" . urlencode($query) . "&media=music&limit=10";
 
         $ch = curl_init();

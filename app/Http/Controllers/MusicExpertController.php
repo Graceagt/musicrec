@@ -34,15 +34,22 @@ class MusicExpertController extends Controller
     private function forwardChainingCF($facts)
     {
         $newFacts = $facts;
+        $fired = []; 
+        foreach ($this->cfRules as $idx => $rule) {
+            $fired[$idx] = false;
+        }
+
         $changed = true;
-        $maxIterations = 50;
         $iteration = 0;
 
-        while ($changed && $iteration < $maxIterations) {
+        while ($changed && $iteration < 50) {
             $changed = false;
             $iteration++;
 
-            foreach ($this->cfRules as $rule) {
+            foreach ($this->cfRules as $idx => $rule) {
+
+                if ($fired[$idx]) continue;
+
                 $premises = $rule['if'];
                 $then = $rule['then'];
                 $cfPakar = $rule['cf'];
@@ -57,14 +64,21 @@ class MusicExpertController extends Controller
                     }
                 }
 
+                // jika premis terpenuhi
                 if (!empty($cfPremis)) {
                     $cfRule = min($cfPremis) * $cfPakar;
 
                     if (isset($newFacts[$then])) {
-                        $newFacts[$then] = round($newFacts[$then] + $cfRule * (1 - $newFacts[$then]), 3);
+                        $newFacts[$then] = round(
+                            $newFacts[$then] + $cfRule * (1 - $newFacts[$then]),
+                            3
+                        );
                     } else {
                         $newFacts[$then] = round($cfRule, 3);
                     }
+
+                    // tandai rule ini sudah aktif → tidak boleh aktif lagi
+                    $fired[$idx] = true;
 
                     $changed = true;
                 }
@@ -73,6 +87,7 @@ class MusicExpertController extends Controller
 
         return $newFacts;
     }
+
 
     public function index()
     {

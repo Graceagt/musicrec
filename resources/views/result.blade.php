@@ -9,35 +9,39 @@
     <h1>🎧 Hasil Rekomendasi Musik</h1>
 
     {{-- ============================= --}}
-    {{-- 🔵 Rangkuman Nilai CF --}}
+    {{-- 🔵 Rangkuman Nilai CF (UI Baru) --}}
     {{-- ============================= --}}
-    <div class="cf-summary" style="margin-bottom: 30px; text-align:center;">
-        <h2>📊 Rangkuman Certainty Factor</h2>
+    <div class="cf-box">
 
-        {{-- List seluruh nilai CF --}}
-        <ul style="list-style:none; padding:0;">
+        <h2 class="cf-title">📊 Rangkuman Certainty Factor</h2>
+
+        <div class="cf-list">
             @foreach($derivedFacts as $mood => $score)
-                <li style="font-size:16px;">
-                    <strong>{{ ucfirst($mood) }}:</strong> {{ $score }}
-                </li>
+                <div class="cf-item">
+                    <span class="cf-mood">{{ ucfirst($mood) }}</span>
+                    <span class="cf-score">{{ $score }}</span>
+                </div>
             @endforeach
-        </ul>
+        </div>
 
-        {{-- Hitung mood utama & total CF --}}
+        {{-- Hitung mood utama --}}
         @php
             $topMood   = array_key_first($derivedFacts);
             $topScore  = $derivedFacts[$topMood];
             $totalCF   = array_sum($derivedFacts);
         @endphp
 
-        <p style="margin-top:10px; font-size:18px;">
-            ⭐ <strong>Mood Dominan:</strong> {{ ucfirst($topMood) }} ({{ $topScore }})
-        </p>
+        <div class="cf-highlight">
+            ⭐ <strong>Mood Dominan:</strong> {{ ucfirst($topMood) }}
+            <span class="cf-value">({{ $topScore }})</span>
+        </div>
 
-        <p style="font-size:18px;">
-            📌 <strong>Total CF:</strong> {{ $totalCF }}
-        </p>
+        <div class="cf-total">
+            📌 <strong>Total CF:</strong> 
+            <span class="cf-value">{{ $totalCF }}</span>
+        </div>
     </div>
+
 
 
     {{-- ============================= --}}
